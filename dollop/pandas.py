@@ -1,6 +1,7 @@
-import io
-import pathlib
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    raise ImportError('Pandas installation required to import from x§dollop.pandas')
 
 from typing import Union, Generator
 

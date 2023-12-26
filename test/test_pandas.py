@@ -48,7 +48,7 @@ def non_pandas_objs():
             (10, 15, 0, 10),  # no full servings, remainder
     )
 )
-def test_series_works(n_items, serving_size, expected_n_full_servings, expected_remainder,
+def test_pandas_obj_works(n_items, serving_size, expected_n_full_servings, expected_remainder,
                       pandas_obj_type, pandas_obj_creators):
 
     create_pandas_obj = pandas_obj_creators[pandas_obj_type]
@@ -70,7 +70,7 @@ def test_series_works(n_items, serving_size, expected_n_full_servings, expected_
 
 
 @pytest.mark.parametrize('non_sequence_type', ('list', 'tuple', 'int', 'float', 'none'))
-def test_non_sequence_raises_error(non_sequence_type, non_pandas_objs):
+def test_non_pandas_obj_raises_error(non_sequence_type, non_pandas_objs):
     non_sequence = non_pandas_objs[non_sequence_type]
     with pytest.raises(NotImplementedError):
         _ = [*serve(non_sequence, serving_size=10)]
