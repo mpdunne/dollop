@@ -1,2 +1,2 @@
-# dollop
-A python package for splitting up iterables into smaller portions
+# Dollop
+A python package for splitting up iterables into smaller portions.

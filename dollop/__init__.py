@@ -1,1 +1,1 @@
-__all__ = ["dollop"]
+from .auto import serve
