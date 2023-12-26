@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 
 from unittest.mock import Mock, patch
@@ -18,6 +19,14 @@ def sequence_types():
 
 
 @pytest.fixture
+def pandas_types():
+    return {
+        'series': pd.Series,
+        'df': pd.DataFrame,
+    }
+
+
+@pytest.fixture
 def other_types():
     return {
         'int': int,
@@ -33,6 +42,15 @@ def test_serve_auto_sequence_type(sequence_type, sequence_types):
         serve_sequence.return_value = iter([None])
         _ = [*serve(mock_obj, serving_size=10)]
         serve_sequence.assert_called_once()
+
+
+@pytest.mark.parametrize('pandas_type', ('series', 'df'))
+def test_serve_auto_pandas_type(pandas_type, pandas_types):
+    mock_obj = Mock(spec=pandas_types[pandas_type])
+    with patch('dollop.auto.serve_pandas') as serve_pandas:
+        serve_pandas.return_value = iter([None])
+        _ = [*serve(mock_obj, serving_size=10)]
+        serve_pandas.assert_called_once()
 
 
 @pytest.mark.parametrize('other_type', ('int', 'float', 'none'))
