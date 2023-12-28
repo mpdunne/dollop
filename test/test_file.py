@@ -28,7 +28,8 @@ def helper_create_and_serve_file_obj(content, file_obj_type, mode, serving_size)
         return dollops
 
 
-def helper_test_served_file_obj(dollops, mode, serving_size, expected_n_full_servings, expected_remainder):
+def helper_test_served_file_obj(content, dollops, mode, serving_size,
+                                expected_n_full_servings, expected_remainder, binary):
 
     subdollops = [d.splitlines() for d in dollops] if mode == 'lines' else dollops
 
@@ -40,6 +41,15 @@ def helper_test_served_file_obj(dollops, mode, serving_size, expected_n_full_ser
         assert len(dollops) == expected_n_full_servings + 1
         assert all([len(d) == serving_size for d in subdollops[:-1]])
         assert len(subdollops[-1]) == expected_remainder
+
+    if binary:
+        assert all([type(d) == bytes for d in dollops])
+        undolloped = ''.join([d.decode() for d in dollops])
+    else:
+        assert all([type(d) == str for d in dollops])
+        undolloped = ''.join(dollops)
+
+    assert undolloped.splitlines() == content.splitlines()
 
 
 @pytest.mark.parametrize('mode', ('characters', 'lines'))
@@ -78,7 +88,8 @@ def test_serve_nonempty_file_poem(mode, file_obj_type,
               'and then moves on.'
 
     dollops = helper_create_and_serve_file_obj(content, file_obj_type, mode, serving_size)
-    helper_test_served_file_obj(dollops, mode, serving_size, expected_n_full_servings, expected_remainder)
+    helper_test_served_file_obj(content, dollops, mode, serving_size,
+                                expected_n_full_servings, expected_remainder, binary=(file_obj_type=='handle_binary'))
 
 
 @pytest.mark.parametrize(
@@ -109,7 +120,8 @@ def test_serve_nonempty_file_blank_space(mode, file_obj_type,
               'where you been?\n'
 
     dollops = helper_create_and_serve_file_obj(content, file_obj_type, mode, serving_size)
-    helper_test_served_file_obj(dollops, mode, serving_size, expected_n_full_servings, expected_remainder)
+    helper_test_served_file_obj(content, dollops, mode, serving_size,
+                                expected_n_full_servings, expected_remainder, binary=(file_obj_type=='handle_binary'))
 
 
 def test_unknown_mode_raises_error():
