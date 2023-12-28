@@ -1,7 +1,11 @@
+import os
+
 from setuptools import setup, find_packages
 
-with open('requirements.txt', 'r') as file_handler:
-    requirements = file_handler.readlines()
+requirements = []
+if os.path.isfile('requirements.txt'):
+    with open('requirements.txt', 'r') as file_handler:
+        requirements = file_handler.readlines()
 
 setup(
     name='dollop',
