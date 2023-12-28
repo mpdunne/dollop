@@ -1,4 +1,6 @@
+import io
 import pandas as pd
+import pathlib
 import pytest
 
 from unittest.mock import Mock, patch
@@ -27,6 +29,14 @@ def pandas_types():
 
 
 @pytest.fixture
+def file_types():
+    return {
+        'handle': io.IOBase,
+        'pathlib': pathlib.Path,
+    }
+
+
+@pytest.fixture
 def other_types():
     return {
         'int': int,
@@ -51,6 +61,15 @@ def test_serve_auto_pandas_type(pandas_type, pandas_types):
         serve_pandas.return_value = iter([None])
         _ = [*serve(mock_obj, serving_size=10)]
         serve_pandas.assert_called_once()
+
+
+@pytest.mark.parametrize('file_type', ('handle', 'pathlib'))
+def test_serve_auto_file_type(file_type, file_types):
+    mock_obj = Mock(spec=file_types[file_type])
+    with patch('dollop.auto.serve_file') as serve_file:
+        serve_file.return_value = iter([None])
+        _ = [*serve(mock_obj, serving_size=10)]
+        serve_file.assert_called_once()
 
 
 @pytest.mark.parametrize('other_type', ('int', 'float', 'none'))

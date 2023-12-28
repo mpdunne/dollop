@@ -1,4 +1,7 @@
-from typing import Any, Generator, Iterable
+import io
+import pathlib
+
+from typing import Any, Generator
 from collections.abc import Sequence as SequenceType
 
 from .sequence import serve as serve_sequence
@@ -10,7 +13,7 @@ try:
 except ImportError:
     pandas_installed = False
 
-# from .file import serve as serve_file
+from .file import serve as serve_file
 
 
 def serve(obj: Any, serving_size: int) -> Generator[Any, None, None]:
@@ -28,6 +31,9 @@ def serve(obj: Any, serving_size: int) -> Generator[Any, None, None]:
 
     elif pandas_installed and isinstance(obj, (pd.DataFrame, pd.Series)):
         yield from serve_pandas(obj, serving_size=serving_size)
+
+    elif isinstance(obj, (io.IOBase, pathlib.Path)):
+        yield from serve_file(obj, serving_size=serving_size)
 
     else:
         raise NotImplementedError(f'Object of type {type(obj)} is not dollopable.')
