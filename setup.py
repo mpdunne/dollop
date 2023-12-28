@@ -11,6 +11,8 @@ setup(
     name='dollop',
     version='1.0.0',
     author='Michael Peter Dunne',
+    long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     include_package_data=True,
     install_requires=requirements,
     packages=find_packages(include=['dollop', 'dollop.*']),
