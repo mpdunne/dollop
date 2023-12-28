@@ -1,74 +1,55 @@
 import pytest
-import re
 
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from dollop.file import serve
 
 
-@pytest.fixture
-def non_empty_file():
-
-    content = '\"Fog\"\n' + \
-              'by Carl Sandburg\n' + \
-              '\n' + \
-              'The fog comes\n' + \
-              'on little cat feet.\n' + \
-              '\n' + \
-              'It sits looking\n' + \
-              'over harbor and city\n' + \
-              'on silent haunches\n' + \
-              'and then moves on.'
+def helper_create_and_serve_file_obj(content, file_obj_type, mode, serving_size):
 
     with TemporaryDirectory() as td:
-        temp_file = f'{td}/content.txt'
-        with open(temp_file, 'w') as f:
+
+        file_path = f'{td}/content.txt'
+        with open(file_path, 'w') as f:
             f.write(content)
-        yield temp_file
+
+        if file_obj_type == 'string':
+            file_obj = file_path
+        elif file_obj_type == 'pathlib':
+            file_obj = Path(file_path)
+        elif file_obj_type == 'handle':
+            file_obj = open(file_path, 'r')
+        elif file_obj_type == 'handle_binary':
+            file_obj = open(file_path, 'rb')
+        else:
+            raise ValueError('Invalid file_obj_type.')
+
+        dollops = [*serve(file_obj, serving_size=serving_size, mode=mode)]
+        return dollops
 
 
-@pytest.fixture
-def empty_file():
-    with TemporaryDirectory() as td:
-        temp_file = f'{td}/empty.txt'
-        with open(temp_file, 'w') as f:
-            pass
-        yield temp_file
+def helper_test_served_file_obj(dollops, mode, serving_size, expected_n_full_servings, expected_remainder):
 
+    subdollops = [d.splitlines() for d in dollops] if mode == 'lines' else dollops
 
-@pytest.fixture
-def file_obj_creators():
+    if expected_remainder == 0:
+        assert len(dollops) == expected_n_full_servings
+        assert all([len(d) == serving_size for d in subdollops])
 
-    def create_string(file_path):
-        return file_path
-
-    def create_pathlib(file_path):
-        return Path(file_path)
-
-    def create_handle(file_path):
-        return open(file_path, 'r')
-
-    def create_handle_binary(file_path):
-        return open(file_path, 'rb')
-
-    return {
-        'string': create_string,
-        'pathlib': create_pathlib,
-        'handle': create_handle,
-        'handle_binary': create_handle_binary,
-    }
+    else:
+        assert len(dollops) == expected_n_full_servings + 1
+        assert all([len(d) == serving_size for d in subdollops[:-1]])
+        assert len(subdollops[-1]) == expected_remainder
 
 
 @pytest.mark.parametrize('mode', ('characters', 'lines'))
 @pytest.mark.parametrize('file_obj_type', ('string', 'pathlib', 'handle', 'handle_binary'))
-def test_serve_empty_file(mode, file_obj_type, file_obj_creators, empty_file):
-    create_file_obj = file_obj_creators[file_obj_type]
-    file_obj = create_file_obj(empty_file)
-    dollops = [*serve(file_obj, serving_size=10, mode=mode)]
+def test_serve_empty_file(mode, file_obj_type):
+    content = ''
+    dollops = helper_create_and_serve_file_obj(content, file_obj_type, mode, serving_size=10)
     assert len(dollops) == 0
 
 
-@pytest.mark.parametrize('file_obj_type', ('string', 'pathlib', 'handle', 'handle_binary'))
 @pytest.mark.parametrize(
     'mode,serving_size,expected_n_full_servings,expected_remainder',
     (
@@ -82,24 +63,53 @@ def test_serve_empty_file(mode, file_obj_type, file_obj_creators, empty_file):
             ('characters', 200, 0, 133),  # no full servings, remainder
     )
 )
-def test_serve_nonempty_file(mode, file_obj_type,
-                             serving_size, expected_n_full_servings, expected_remainder,
-                             file_obj_creators, non_empty_file):
-    create_file_obj = file_obj_creators[file_obj_type]
-    file_obj = create_file_obj(non_empty_file)
-    dollops = [*serve(file_obj, serving_size=serving_size, mode=mode)]
+@pytest.mark.parametrize('file_obj_type', ('string', 'pathlib', 'handle', 'handle_binary'))
+def test_serve_nonempty_file_poem(mode, file_obj_type,
+                                  serving_size, expected_n_full_servings, expected_remainder):
+    content = '\"Fog\"\n' + \
+              'by Carl Sandburg\n' + \
+              '\n' + \
+              'The fog comes\n' + \
+              'on little cat feet.\n' + \
+              '\n' + \
+              'It sits looking\n' + \
+              'over harbor and city\n' + \
+              'on silent haunches\n' + \
+              'and then moves on.'
 
-    # Count the total number of lines
-    subdollops = [d.splitlines() for d in dollops] if mode == 'lines' else dollops
+    dollops = helper_create_and_serve_file_obj(content, file_obj_type, mode, serving_size)
+    helper_test_served_file_obj(dollops, mode, serving_size, expected_n_full_servings, expected_remainder)
 
-    if expected_remainder == 0:
-        assert len(dollops) == expected_n_full_servings
-        assert all([len(d) == serving_size for d in subdollops])
 
-    else:
-        assert len(dollops) == expected_n_full_servings + 1
-        assert all([len(d) == serving_size for d in subdollops[:-1]])
-        assert len(subdollops[-1]) == expected_remainder
+@pytest.mark.parametrize(
+    'mode,serving_size,expected_n_full_servings,expected_remainder',
+    (
+            ('lines', 10, 1, 0),  # everything in one serving
+            ('lines', 5, 2, 0),  # split, no remainder
+            ('lines', 3, 3, 1),  # split, remainder
+            ('lines', 20, 0, 10),  # no full servings, remainder
+            ('characters', 40, 1, 0),  # everything in one serving
+            ('characters', 20, 2, 0),  # split, no remainder
+            ('characters', 17, 2, 6),  # split, remainder
+            ('characters', 50, 0, 40),  # no full servings, remainder
+    )
+)
+@pytest.mark.parametrize('file_obj_type', ('string', 'pathlib', 'handle', 'handle_binary'))
+def test_serve_nonempty_file_blank_space(mode, file_obj_type,
+                                         serving_size, expected_n_full_servings, expected_remainder):
+    content = '\n' + \
+              '\n' + \
+              '\n' + \
+              'nice to\n' + \
+              '\n' + \
+              'meet you\n' + \
+              '\n' + \
+              '\n' + \
+              '\n' + \
+              'where you been?\n'
+
+    dollops = helper_create_and_serve_file_obj(content, file_obj_type, mode, serving_size)
+    helper_test_served_file_obj(dollops, mode, serving_size, expected_n_full_servings, expected_remainder)
 
 
 def test_unknown_mode_raises_error():
