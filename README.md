@@ -12,10 +12,22 @@ Example usage (automatically checks object type):
 ```
 from dollop import serve
 
-dollops = serve(items, serving_size=10)
+for dollop in serve('Dolloping all day long', serving_size=6):
+    print(dollop)
 
-for dollop in dollops:
-    do_something(dollop)
+for dollop in serve((1, 1, 2, 3, 5, 8, 13, 21, 34, 55), serving_size=4):
+    print(dollop)
+```
+
+Output:
+```
+Dollop
+ing al
+l day 
+long
+(1, 1, 2, 3)
+(5, 8, 13, 21)
+(34, 55)
 ```
 
 The `serving_size` parameter defines how many items/lines/characters/etc. you want in each dollop!
@@ -46,4 +58,4 @@ from itertools import batched
 batches = batched(iterable, n))
 ```
 
-These both have the disadvantage that typing is not preserved.
+However these both have the major disadvantage that typing is not preserved, for example chunking/batching a string does not return an iterable of strings, but an iterable of tuples.
