@@ -9,7 +9,7 @@ if os.path.isfile('requirements.txt'):
 
 setup(
     name='dollop',
-    version='1.0.0',
+    version='1.0.1',
     author='Michael Peter Dunne',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
