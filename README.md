@@ -1,6 +1,9 @@
 # Dollop
 A python package for splitting up iterables into smaller portions 🥣.
 
+## Installation
+`pip install dollop`
+
 ## Usage
 
 Supports:
