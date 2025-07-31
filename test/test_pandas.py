@@ -38,35 +38,52 @@ def non_pandas_objs():
 
 
 @pytest.mark.parametrize('pandas_obj_type', ('series', 'df'))
-@pytest.mark.parametrize(
-    'n_items,serving_size,expected_n_full_servings,expected_remainder',
-    (
-            (0, 10, 0, 0),  # empty
-            (10, 10, 1, 0),  # everything in one serving
-            (10, 5, 2, 0),  # split, no remainder
-            (10, 3, 3, 1),  # split, remainder
-            (10, 15, 0, 10),  # no full servings, remainder
-    )
-)
-def test_pandas_obj_works(n_items, serving_size, expected_n_full_servings, expected_remainder,
-                      pandas_obj_type, pandas_obj_creators):
+@pytest.mark.parametrize("n_items", (0, 5, 10, 13, 17, 25, 50, 100))
+@pytest.mark.parametrize("serving_size", [1, 2, 3, 5, 10, 21, 25, 27, 100, 200])
+def test_serve_pandas_by_serving_size(n_items, serving_size, pandas_obj_type, pandas_obj_creators):
 
     create_pandas_obj = pandas_obj_creators[pandas_obj_type]
 
     pandas_obj = create_pandas_obj(n=n_items)
     dollops = [*serve(pandas_obj, serving_size=serving_size)]
 
-    if expected_remainder == 0:
-        assert len(dollops) == expected_n_full_servings
-        assert all([len(d) == serving_size for d in dollops])
-    else:
-        assert len(dollops) == expected_n_full_servings + 1
-        assert all([len(d) == serving_size for d in dollops[:-1]])
-        assert len(dollops[-1]) == expected_remainder
+    expected_full = len(pandas_obj) // serving_size
+    remainder = len(pandas_obj) % serving_size
 
-    if n_items != 0:
-        assert (pd.concat(dollops) == pandas_obj).all().all()
-        assert all([type(serving) == type(pandas_obj) for serving in dollops])
+    if remainder == 0:
+        assert len(dollops) == expected_full
+        assert all(len(d) == serving_size for d in dollops)
+    else:
+        assert len(dollops) == expected_full + 1
+        assert all(len(d) == serving_size for d in dollops[:-1])
+        assert len(dollops[-1]) == remainder
+
+    assert all(isinstance(d, type(pandas_obj)) for d in dollops)
+
+    if len(pandas_obj) > 0:
+        recon = pd.concat(dollops)
+        assert recon.reset_index(drop=True).equals(pandas_obj.reset_index(drop=True))
+
+
+@pytest.mark.parametrize('pandas_obj_type', ('series', 'df'))
+@pytest.mark.parametrize("n_items", (0, 5, 10, 13, 17, 25, 50, 100))
+@pytest.mark.parametrize("n_servings", [1, 2, 3, 5, 10, 21, 25, 27, 100, 200])
+def test_serve_pandas_by_n_servings(n_items, n_servings, pandas_obj_type, pandas_obj_creators):
+
+    create_pandas_obj = pandas_obj_creators[pandas_obj_type]
+
+    pandas_obj = create_pandas_obj(n=n_items)
+    dollops = [*serve(pandas_obj, n_servings=n_servings)]
+
+    assert len(dollops) == n_servings
+
+    max_size = n_items // n_servings + 1
+    assert all(len(d) in (max_size - 1, max_size) for d in dollops)
+    assert all(isinstance(d, type(pandas_obj)) for d in dollops)
+
+    if len(pandas_obj) > 0:
+        recon = pd.concat(dollops)
+        assert recon.reset_index(drop=True).equals(pandas_obj.reset_index(drop=True))
 
 
 @pytest.mark.parametrize('non_sequence_type', ('list', 'tuple', 'int', 'float', 'none'))

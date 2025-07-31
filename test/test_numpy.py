@@ -21,7 +21,7 @@ arrays = [np.random.random(size=size) for size in sizes]
 @pytest.mark.parametrize("array", arrays)
 @pytest.mark.parametrize("dim", [*range(5)])
 @pytest.mark.parametrize("serving_size", [1, 2, 3, 5, 10, 21, 25, 27, 100, 200])
-def test_serve_numpy(array, dim, serving_size):
+def test_serve_numpy_by_serving_size(array, dim, serving_size):
 
     if array.ndim <= dim:
         with pytest.raises(ValueError):
@@ -52,6 +52,35 @@ def test_serve_numpy(array, dim, serving_size):
     recon = np.concatenate(dollops, axis=dim)
     np.testing.assert_array_equal(recon, array)
     assert all(isinstance(d, np.ndarray) for d in dollops)
+
+
+@pytest.mark.parametrize("array", arrays)
+@pytest.mark.parametrize("dim", [*range(5)])
+@pytest.mark.parametrize("n_servings", [1, 2, 3, 5, 10, 21, 25, 27, 100, 200])
+def test_serve_numpy_by_n_servings(array, dim, n_servings):
+
+    if array.ndim <= dim:
+        with pytest.raises(ValueError):
+            _ = [*serve(array, n_servings=n_servings, dim=dim)]
+        return
+
+    size = array.shape[dim]
+    other_dims = [i for i in range(array.ndim) if i != dim]
+    other_shapes = [array.shape[i] for i in other_dims]
+
+    dollops = [*serve(array, n_servings=n_servings, dim=dim)]
+    assert len(dollops) == n_servings
+
+    max_size = size // n_servings + 1
+    assert all(d.shape[dim] in (max_size - 1, max_size) for d in dollops)
+    assert all(isinstance(d, np.ndarray) for d in dollops)
+
+    for d in dollops:
+        for i, shape in zip(other_dims, other_shapes):
+            assert d.shape[i] == shape, f"Mismatch on dim {i}: expected {shape}, got {d.shape[i]}"
+
+    recon = np.concatenate(dollops, axis=dim)
+    np.testing.assert_array_equal(recon, array)
 
 
 def test_serve_numpy_0d_array_raises():
