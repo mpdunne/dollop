@@ -8,18 +8,19 @@ A python package for splitting up iterables into smaller portions 🥣.
 
 Supports:
 - **Sequences:** `list`, `tuple`, `str`, `range`, `bytes`, `bytearray` or any other sequence-like object.
-- **Pandas objects:** `DataFrame`, `Series`.
+- **Pandas objects:** `pd.DataFrame`, `pd.Series`.
+- **Array-like objects:** `np.ndarray`, `torch.Tensor`.
 - **Files:** either as a file path or handle.
 
 Example usage (automatically checks object type):
 ```
 from dollop import serve
 
-for dollop in serve('Dolloping all day long', serving_size=6):
-    print(dollop)
+for serving in serve('Dolloping all day long', serving_size=6):
+    print(serving)
 
-for dollop in serve((1, 1, 2, 3, 5, 8, 13, 21, 34, 55), serving_size=4):
-    print(dollop)
+for serving in serve((1, 1, 2, 3, 5, 8, 13, 21, 34, 55), serving_size=4):
+    print(serving)
 ```
 
 Output:

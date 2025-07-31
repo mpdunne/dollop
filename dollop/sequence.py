@@ -8,7 +8,7 @@ def serve(items: Sequence[Any], serving_size: int) -> Generator[Sequence[Any], N
 
     :param items: The original sequence of items.
     :param serving_size: The max number of items in each outputted subsequence.
-    :return:
+    :return: Generator yielding sliced subsequences.
     """
 
     if not isinstance(items, SequenceType):
