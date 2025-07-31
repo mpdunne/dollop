@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 def serve(array: "numpy.ndarray", serving_size: int = None, n_servings: int = None, dim: int = 0) -> \
         Generator["numpy.ndarray", None, None]:
     """
-    Read a NumPy array small chunks at a time.
+    Read a NumPy array small dollops at a time.
 
     :param array: The NumPy array to slice.
-    :param serving_size: The size of each slice. Mutually exclusive with n_servings.
-    :param n_servings: The size of each slice. Mutually exclusive with serving_size.
+    :param serving_size: The size of each dollop. Mutually exclusive with n_servings.
+    :param n_servings: The number of dollops, of roughly equal size. Mutually exclusive with serving_size.
     :param dim: The dimension along which to slice. Default is 0.
     :return: Generator yielding array slices.
     """

@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 def serve(tensor: "torch.Tensor", serving_size: int = None, n_servings: int = None, dim: int = 0) -> \
         Generator["torch.Tensor", None, None]:
     """
-    Read a PyTorch tensor small chunks at a time.
+    Read a PyTorch tensor small dollops at a time.
 
     :param tensor: The tensor object.
-    :param serving_size: The size of each slice. Mutually exclusive with n_servings.
-    :param n_servings: The size of each slice. Mutually exclusive with serving_size.
+    :param serving_size: The size of each dollop. Mutually exclusive with n_servings.
+    :param n_servings: The number of dollops, of roughly equal size. Mutually exclusive with serving_size.
     :param dim: The dimension along which to slice. Default is 0.
     :return: Generator yielding tensor slices.
     """

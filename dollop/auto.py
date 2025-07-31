@@ -13,8 +13,13 @@ from .torch import serve as serve_torch
 
 def serve(obj: Any, serving_size: int = None, n_servings: int = None, **kwargs) -> Generator[Any, None, None]:
     """
-    Split an iterable of items into a number of smaller iterables with max serving_size items
-    in each. Detect the type automatically and decide how to proceed.
+    Split an object into a series of smaller chunks, either by fixed serving size or by number of servings.
+
+    Exactly one of `serving_size` or `n_servings` must be specified.
+
+    - If `serving_size` is given, each output will contain up to that many items (the last may be smaller).
+    - If `n_servings` is given, the input will be split into that many chunks, as evenly as possible.
+
 
     :param obj: The object that we wish to serve.
     :param serving_size: The max number of items in each outputted subiterable. Mutually exclusive with n_servings.

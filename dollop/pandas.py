@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 def serve(pandas_obj: "pandas.DataFrame | pandas.Series", serving_size: int = None, n_servings: int = None) -> \
         Generator["pandas.DataFrame | pandas.Series", None, None]:
     """
-    Read a Pandas object small chunks at a time.
+    Read a Pandas object small dollops at a time.
 
     :param pandas_obj: The Pandas object.
-    :param serving_size: The size of each slice. Mutually exclusive with n_servings.
-    :param n_servings: The size of each slice. Mutually exclusive with serving_size.
+    :param serving_size: The size of each dollop. Mutually exclusive with n_servings.
+    :param n_servings: The number of dollops, of roughly equal size. Mutually exclusive with serving_size.
     :return: Generator yielding sliced pandas objects.
     """
 
