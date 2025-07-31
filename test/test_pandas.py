@@ -72,5 +72,5 @@ def test_pandas_obj_works(n_items, serving_size, expected_n_full_servings, expec
 @pytest.mark.parametrize('non_sequence_type', ('list', 'tuple', 'int', 'float', 'none'))
 def test_non_pandas_obj_raises_error(non_sequence_type, non_pandas_objs):
     non_sequence = non_pandas_objs[non_sequence_type]
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         _ = [*serve(non_sequence, serving_size=10)]

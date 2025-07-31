@@ -1,7 +1,9 @@
 import io
+import numpy as np
 import pandas as pd
 import pathlib
 import pytest
+import torch
 
 from unittest.mock import Mock, patch
 
@@ -21,6 +23,14 @@ def sequence_types():
 
 
 @pytest.fixture
+def file_types():
+    return {
+        'handle': io.IOBase,
+        'pathlib': pathlib.Path,
+    }
+
+
+@pytest.fixture
 def pandas_types():
     return {
         'series': pd.Series,
@@ -29,10 +39,16 @@ def pandas_types():
 
 
 @pytest.fixture
-def file_types():
+def torch_types():
     return {
-        'handle': io.IOBase,
-        'pathlib': pathlib.Path,
+        'tensor': torch.Tensor,
+    }
+
+
+@pytest.fixture
+def numpy_types():
+    return {
+        'array': np.ndarray,
     }
 
 
@@ -54,6 +70,15 @@ def test_serve_auto_sequence_type(sequence_type, sequence_types):
         serve_sequence.assert_called_once()
 
 
+@pytest.mark.parametrize('file_type', ('handle', 'pathlib'))
+def test_serve_auto_file_type(file_type, file_types):
+    mock_obj = Mock(spec=file_types[file_type])
+    with patch('dollop.auto.serve_file') as serve_file:
+        serve_file.return_value = iter([None])
+        _ = [*serve(mock_obj, serving_size=10)]
+        serve_file.assert_called_once()
+
+
 @pytest.mark.parametrize('pandas_type', ('series', 'df'))
 def test_serve_auto_pandas_type(pandas_type, pandas_types):
     mock_obj = Mock(spec=pandas_types[pandas_type])
@@ -63,13 +88,22 @@ def test_serve_auto_pandas_type(pandas_type, pandas_types):
         serve_pandas.assert_called_once()
 
 
-@pytest.mark.parametrize('file_type', ('handle', 'pathlib'))
-def test_serve_auto_file_type(file_type, file_types):
-    mock_obj = Mock(spec=file_types[file_type])
-    with patch('dollop.auto.serve_file') as serve_file:
-        serve_file.return_value = iter([None])
+@pytest.mark.parametrize('numpy_type', ('array',))
+def test_serve_auto_numpy_types(numpy_type, numpy_types):
+    mock_obj = Mock(spec=numpy_types[numpy_type])
+    with patch('dollop.auto.serve_numpy') as serve_numpy:
+        serve_numpy.return_value = iter([None])
         _ = [*serve(mock_obj, serving_size=10)]
-        serve_file.assert_called_once()
+        serve_numpy.assert_called_once()
+
+
+@pytest.mark.parametrize('torch_type', ('tensor',))
+def test_serve_auto_torch_type(torch_type, torch_types):
+    mock_obj = Mock(spec=torch_types[torch_type])
+    with patch('dollop.auto.serve_torch') as serve_torch:
+        serve_torch.return_value = iter([None])
+        _ = [*serve(mock_obj, serving_size=10)]
+        serve_torch.assert_called_once()
 
 
 @pytest.mark.parametrize('other_type', ('int', 'float', 'none'))
