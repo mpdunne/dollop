@@ -1,12 +1,10 @@
-try:
-    import numpy as np
-except ImportError:
-    raise ImportError('PyTorch installation required to import from dollop.torch')
+from typing import Generator, TYPE_CHECKING
 
-from typing import Generator
+if TYPE_CHECKING:
+    import numpy # Keep this here for string-based type-checking
 
 
-def serve(array: np.ndarray, serving_size: int, dim: int = 0) -> Generator[np.ndarray, None, None]:
+def serve(array: "numpy.ndarray", serving_size: int, dim: int = 0) -> Generator["numpy.ndarray", None, None]:
     """
     Read a NumPy array small chunks at a time.
 
@@ -15,7 +13,7 @@ def serve(array: np.ndarray, serving_size: int, dim: int = 0) -> Generator[np.nd
     :param dim: The dimension along which to slice. Default is 0.
     :return: Generator yielding array slices.
     """
-    if not isinstance(array, np.ndarray):
+    if not (array.__class__.__module__.startswith("numpy") and array.__class__.__name__ == "ndarray"):
         raise NotImplementedError('Dollop numpy.serve only supports NumPy ndarray types.')
 
     if array.ndim == 0:

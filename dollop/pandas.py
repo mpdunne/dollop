@@ -1,14 +1,11 @@
-try:
-    import pandas as pd
-except ImportError:
-    raise ImportError('Pandas installation required to import from dollop.pandas')
+from typing import Generator, TYPE_CHECKING
 
-from typing import Union, Generator
-
-PandasType = Union[pd.DataFrame, pd.Series]
+if TYPE_CHECKING:
+    import pandas # Keep this here for string-based type-checking
 
 
-def serve(pandas_obj: PandasType, serving_size: int) -> Generator[PandasType, None, None]:
+def serve(pandas_obj: "pandas.DataFrame | pandas.Series", serving_size: int) -> \
+        Generator["pandas.DataFrame | pandas.Series", None, None]:
     """
     Read a Pandas object small chunks at a time.
 
@@ -16,8 +13,13 @@ def serve(pandas_obj: PandasType, serving_size: int) -> Generator[PandasType, No
     :param serving_size: The max number of items in each serving.
     :return: Generator yielding sliced pandas objects.
     """
-    if not isinstance(pandas_obj, (pd.DataFrame, pd.Series)):
-        raise NotImplementedError('Dollop pandas.serve only supports objects of DataFrame or Series types.')
+
+    cls = pandas_obj.__class__
+    is_dataframe = cls.__module__.startswith("pandas.core.frame") and cls.__name__ == "DataFrame"
+    is_series = cls.__module__.startswith("pandas.core.series") and cls.__name__ == "Series"
+
+    if not (is_dataframe or is_series):
+        raise NotImplementedError(f"Dollop pandas.serve only supports pandas DataFrame or Series")
 
     for i in range(0, len(pandas_obj), serving_size):
         yield pandas_obj.iloc[i: i + serving_size]

@@ -1,12 +1,10 @@
-try:
-    import torch
-except ImportError:
-    raise ImportError('PyTorch installation required to import from dollop.torch')
+from typing import Generator, TYPE_CHECKING
 
-from typing import Generator
+if TYPE_CHECKING:
+    import torch # Keep this here for string-based type-checking
 
 
-def serve(tensor: torch.Tensor, serving_size: int, dim: int = 0) -> Generator[torch.Tensor, None, None]:
+def serve(tensor: "torch.Tensor", serving_size: int, dim: int = 0) -> Generator["torch.Tensor", None, None]:
     """
     Read a PyTorch tensor small chunks at a time.
 
@@ -15,8 +13,8 @@ def serve(tensor: torch.Tensor, serving_size: int, dim: int = 0) -> Generator[to
     :param dim: The dimension along which to slice. Default is 0.
     :return: Generator yielding tensor slices.
     """
-    if not isinstance(tensor, torch.Tensor):
-        raise NotImplementedError('Dollop torch.serve only supports PyTorch tensor types.')
+    if not (tensor.__class__.__module__.startswith("torch") and tensor.__class__.__name__ == "Tensor"):
+        raise NotImplementedError('Dollop torch.serve only supports PyTorch Tensor types.')
 
     if tensor.ndim == 0:
         raise ValueError("Cannot slice a zero-dimensional (scalar) tensor.")
