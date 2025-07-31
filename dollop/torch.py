@@ -14,7 +14,7 @@ def serve(tensor: "torch.Tensor", serving_size: int, dim: int = 0) -> Generator[
     :return: Generator yielding tensor slices.
     """
     if not (tensor.__class__.__module__.startswith("torch") and tensor.__class__.__name__ == "Tensor"):
-        raise NotImplementedError('Dollop torch.serve only supports PyTorch Tensor types.')
+        raise TypeError('Dollop torch.serve only supports PyTorch Tensor types.')
 
     if tensor.ndim == 0:
         raise ValueError("Cannot slice a zero-dimensional (scalar) tensor.")
@@ -22,8 +22,14 @@ def serve(tensor: "torch.Tensor", serving_size: int, dim: int = 0) -> Generator[
     if dim < 0 or dim >= tensor.ndim:
         raise ValueError(f"Invalid dim={dim}; tensor has {tensor.ndim} dimensions.")
 
-    dim_size = tensor.shape[dim]
-    for i in range(0, dim_size, serving_size):
-        slc = [slice(None)] * tensor.ndim
-        slc[dim] = slice(i, i + serving_size)
-        yield tensor[tuple(slc)]
+    # Make a view of the array with the chosen dim at the front.
+    axes = list(range(tensor.ndim))
+    axes[0], axes[dim] = axes[dim], axes[0]
+    tensor_permuted = tensor.permute(*axes)
+
+    # Get inverse permutation
+    axes_inv = [axes.index(i) for i in range(tensor.ndim)]
+
+    for i in range(0, tensor_permuted.shape[0], serving_size):
+        dollop = tensor_permuted[i: i + serving_size]
+        yield dollop.permute(*axes_inv)

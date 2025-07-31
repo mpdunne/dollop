@@ -14,16 +14,22 @@ def serve(array: "numpy.ndarray", serving_size: int, dim: int = 0) -> Generator[
     :return: Generator yielding array slices.
     """
     if not (array.__class__.__module__.startswith("numpy") and array.__class__.__name__ == "ndarray"):
-        raise NotImplementedError('Dollop numpy.serve only supports NumPy ndarray types.')
+        raise TypeError('Dollop numpy.serve only supports NumPy ndarray types.')
 
     if array.ndim == 0:
         raise ValueError("Cannot slice a zero-dimensional (scalar) array.")
 
     if dim < 0 or dim >= array.ndim:
-        raise ValueError(f"Invalid dim={dim}; array has {array.ndim} dimensions.")
+        raise ValueError(f"Specified dim ({dim}) must be smaller than the number of array dimensions ({array.ndim})")
 
-    dim_size = array.shape[dim]
-    for i in range(0, dim_size, serving_size):
-        slc = [slice(None)] * array.ndim
-        slc[dim] = slice(i, i + serving_size)
-        yield array[tuple(slc)]
+    # Make a view of the array with the chosen dim at the front.
+    axes = list(range(array.ndim))
+    axes[0], axes[dim] = axes[dim], axes[0]
+    array_permutated = array.transpose(axes)
+
+    # Get inverse permutation
+    axes_inv = [axes.index(i) for i in range(array.ndim)]
+
+    for i in range(0, len(array_permutated), serving_size):
+        dollop = array_permutated[i: i + serving_size]
+        yield dollop.transpose(axes_inv)

@@ -19,7 +19,7 @@ def serve(pandas_obj: "pandas.DataFrame | pandas.Series", serving_size: int) -> 
     is_series = cls.__module__.startswith("pandas.core.series") and cls.__name__ == "Series"
 
     if not (is_dataframe or is_series):
-        raise NotImplementedError(f"Dollop pandas.serve only supports pandas DataFrame or Series")
+        raise TypeError(f"Dollop pandas.serve only supports pandas DataFrame or Series")
 
     for i in range(0, len(pandas_obj), serving_size):
         yield pandas_obj.iloc[i: i + serving_size]
