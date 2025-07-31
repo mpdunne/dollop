@@ -1,16 +1,19 @@
 from typing import Generator, TYPE_CHECKING
 
+from ._utils import calculate_slices
+
 if TYPE_CHECKING:
     import pandas # Keep this here for string-based type-checking
 
 
-def serve(pandas_obj: "pandas.DataFrame | pandas.Series", serving_size: int) -> \
+def serve(pandas_obj: "pandas.DataFrame | pandas.Series", serving_size: int = None, n_servings: int = None) -> \
         Generator["pandas.DataFrame | pandas.Series", None, None]:
     """
     Read a Pandas object small chunks at a time.
 
     :param pandas_obj: The Pandas object.
-    :param serving_size: The max number of items in each serving.
+    :param serving_size: The size of each slice. Mutually exclusive with n_servings.
+    :param n_servings: The size of each slice. Mutually exclusive with serving_size.
     :return: Generator yielding sliced pandas objects.
     """
 
@@ -21,6 +24,8 @@ def serve(pandas_obj: "pandas.DataFrame | pandas.Series", serving_size: int) -> 
     if not (is_dataframe or is_series):
         raise TypeError(f"Dollop pandas.serve only supports pandas DataFrame or Series")
 
-    for i in range(0, len(pandas_obj), serving_size):
-        yield pandas_obj.iloc[i: i + serving_size]
+    slices = calculate_slices(total=len(pandas_obj), serving_size=serving_size, n_servings=n_servings)
+
+    for slc in slices:
+        yield pandas_obj.iloc[slc]
 

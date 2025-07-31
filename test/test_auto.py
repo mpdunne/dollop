@@ -79,6 +79,13 @@ def test_serve_auto_file_type(file_type, file_types):
         serve_file.assert_called_once()
 
 
+@pytest.mark.parametrize('file_type', ('handle', 'pathlib'))
+def test_serve_auto_file_type_cant_dollop_by_n_servings(file_type, file_types):
+    mock_obj = Mock(spec=file_types[file_type])
+    with pytest.raises(ValueError):
+        _ = [*serve(mock_obj, n_servings=10)]
+
+
 @pytest.mark.parametrize('pandas_type', ('series', 'df'))
 def test_serve_auto_pandas_type(pandas_type, pandas_types):
     mock_obj = Mock(spec=pandas_types[pandas_type])

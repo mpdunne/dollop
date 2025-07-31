@@ -139,3 +139,4 @@ def test_nonexistent_file_raises_error():
     with TemporaryDirectory() as td:
         with pytest.raises(FileNotFoundError):
             _ = [*serve(f'{td}/file.txt', serving_size=1)]
+

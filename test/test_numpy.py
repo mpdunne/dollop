@@ -56,8 +56,12 @@ def test_serve_numpy(array, dim, serving_size):
 
 def test_serve_numpy_0d_array_raises():
     scalar = np.array(42)
+
     with pytest.raises(ValueError):
         _ = [*serve(scalar, serving_size=1)]
+
+    with pytest.raises(ValueError):
+        _ = [*serve(scalar, n_servings=1)]
 
 
 @pytest.mark.parametrize("bad_input", [
@@ -70,3 +74,6 @@ def test_serve_numpy_0d_array_raises():
 def test_serve_numpy_non_numpy_obj_raises_error(bad_input):
     with pytest.raises(TypeError):
         _ = [*serve(bad_input, serving_size=5)]
+
+    with pytest.raises(TypeError):
+        _ = [*serve(bad_input, n_servings=5)]

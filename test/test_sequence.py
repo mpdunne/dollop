@@ -80,3 +80,5 @@ def test_non_sequence_raises_error(non_sequence_type, non_sequences):
     non_sequence = non_sequences[non_sequence_type]
     with pytest.raises(NotImplementedError):
         _ = [*serve(non_sequence, serving_size=10)]
+    with pytest.raises(NotImplementedError):
+        _ = [*serve(non_sequence, n_servings=10)]

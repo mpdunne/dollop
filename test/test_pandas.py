@@ -74,3 +74,5 @@ def test_non_pandas_obj_raises_error(non_sequence_type, non_pandas_objs):
     non_sequence = non_pandas_objs[non_sequence_type]
     with pytest.raises(TypeError):
         _ = [*serve(non_sequence, serving_size=10)]
+    with pytest.raises(TypeError):
+        _ = [*serve(non_sequence, n_servings=10)]

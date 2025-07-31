@@ -58,6 +58,8 @@ def test_serve_torch_0d_tensor_raises():
     scalar = torch.tensor(42)
     with pytest.raises(ValueError):
         _ = [*serve(scalar, serving_size=1)]
+    with pytest.raises(ValueError):
+        _ = [*serve(scalar, n_servings=1)]
 
 
 @pytest.mark.parametrize("bad_input", [
@@ -70,3 +72,5 @@ def test_serve_torch_0d_tensor_raises():
 def test_serve_torch_non_tensor_obj_raises_error(bad_input):
     with pytest.raises(TypeError):
         _ = [*serve(bad_input, serving_size=5)]
+    with pytest.raises(TypeError):
+        _ = [*serve(bad_input, n_servings=5)]
