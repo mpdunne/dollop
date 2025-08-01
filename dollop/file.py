@@ -3,6 +3,8 @@ import pathlib
 
 from typing import Union, Generator
 
+from ._utils import validate_serving_args
+
 
 def serve(file: Union[str, pathlib.Path, io.IOBase], serving_size: int, mode='lines') \
                 -> Generator[str, None, None]:
@@ -10,10 +12,12 @@ def serve(file: Union[str, pathlib.Path, io.IOBase], serving_size: int, mode='li
     Read a file small dollops at a time.
 
     :param file: The path or file handle.
-    :param serving_size: The max number of lines in each serving.
+    :param serving_size: The max number of lines or characters in each serving.
     :param mode: Either 'lines' or 'chars'/'characters' to read line-by-line or character-by-character.
     :return:
     """
+
+    validate_serving_args(serving_size, n_servings=None)
 
     if mode == 'lines':
         def read_next(h):

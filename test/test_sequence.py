@@ -44,35 +44,52 @@ def non_sequences():
 
 
 @pytest.mark.parametrize('sequence_type', ('list', 'tuple', 'str', 'range', 'bytes', 'bytearray'))
-@pytest.mark.parametrize(
-    'n_items,serving_size,expected_n_full_servings,expected_remainder',
-    (
-            (0, 10, 0, 0),  # empty
-            (10, 10, 1, 0),  # everything in one serving
-            (10, 5, 2, 0),  # split, no remainder
-            (10, 3, 3, 1),  # split, remainder
-            (10, 15, 0, 10),  # no full servings, remainder
-    )
-)
-def test_sequence_works(n_items, serving_size, expected_n_full_servings, expected_remainder,
-                        sequence_type, sequence_creators):
+@pytest.mark.parametrize("n_items", (0, 5, 10, 13, 17, 25, 50, 100))
+@pytest.mark.parametrize("serving_size", [1, 2, 3, 5, 10, 21, 25, 27, 100, 200])
+def test_serve_sequence_by_serving_size(n_items, serving_size, sequence_type, sequence_creators):
+
     create_sequence = sequence_creators[sequence_type]
 
     items = create_sequence(n=n_items)
     dollops = [*serve(items, serving_size=serving_size)]
 
-    if expected_remainder == 0:
-        assert len(dollops) == expected_n_full_servings
-        assert all([len(d) == serving_size for d in dollops])
+    expected_full = len(items) // serving_size
+    remainder = len(items) % serving_size
+
+    if remainder == 0:
+        assert len(dollops) == expected_full
+        assert all(len(d) == serving_size for d in dollops)
     else:
-        assert len(dollops) == expected_n_full_servings + 1
-        assert all([len(d) == serving_size for d in dollops[:-1]])
-        assert len(dollops[-1]) == expected_remainder
+        assert len(dollops) == expected_full + 1
+        assert all(len(d) == serving_size for d in dollops[:-1])
+        assert len(dollops[-1]) == remainder
 
-    expected_items = [x for c in dollops for x in c]
-    assert all(x == y for x, y in zip(expected_items, items))
+    assert all(isinstance(d, type(items)) for d in dollops)
 
-    assert all([type(serving) == type(items) for serving in dollops])
+    recon = [x for d in dollops for x in d]
+    assert len(recon) == len(items)
+    assert all(x == y for x, y in zip(recon, items))
+
+
+@pytest.mark.parametrize('sequence_type', ('list', 'tuple', 'str', 'range', 'bytes', 'bytearray'))
+@pytest.mark.parametrize("n_items", (0, 5, 10, 13, 17, 25, 50, 100))
+@pytest.mark.parametrize("n_servings", [1, 2, 3, 5, 10, 21, 25, 27, 100, 200])
+def test_serve_sequence_by_n_servings(n_items, n_servings, sequence_type, sequence_creators):
+
+    create_sequence = sequence_creators[sequence_type]
+
+    items = create_sequence(n=n_items)
+    dollops = [*serve(items, n_servings=n_servings)]
+
+    assert len(dollops) == n_servings
+
+    max_size = n_items // n_servings + 1
+    assert all(len(d) in (max_size - 1, max_size) for d in dollops)
+    assert all(isinstance(d, type(items)) for d in dollops)
+
+    recon = [x for d in dollops for x in d]
+    assert len(recon) == len(items)
+    assert all(x == y for x, y in zip(recon, items))
 
 
 @pytest.mark.parametrize('non_sequence_type', ('int', 'float', 'none'))
@@ -80,3 +97,5 @@ def test_non_sequence_raises_error(non_sequence_type, non_sequences):
     non_sequence = non_sequences[non_sequence_type]
     with pytest.raises(NotImplementedError):
         _ = [*serve(non_sequence, serving_size=10)]
+    with pytest.raises(NotImplementedError):
+        _ = [*serve(non_sequence, n_servings=10)]

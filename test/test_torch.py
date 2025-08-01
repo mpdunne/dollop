@@ -22,7 +22,7 @@ arrays = [torch.rand(size) for size in sizes]
 @pytest.mark.parametrize("tensor", arrays)
 @pytest.mark.parametrize("dim", list(range(5)))
 @pytest.mark.parametrize("serving_size", [1, 2, 3, 5, 10, 21, 25, 27, 100, 200])
-def test_serve_torch(tensor, dim, serving_size):
+def test_serve_torch_by_serving_size(tensor, dim, serving_size):
     if tensor.ndim <= dim:
         with pytest.raises(ValueError):
             _ = [*serve(tensor, serving_size=serving_size, dim=dim)]
@@ -54,10 +54,40 @@ def test_serve_torch(tensor, dim, serving_size):
     assert all(isinstance(d, torch.Tensor) for d in dollops)
 
 
+@pytest.mark.parametrize("tensor", arrays)
+@pytest.mark.parametrize("dim", list(range(5)))
+@pytest.mark.parametrize("n_servings", [1, 2, 3, 5, 10, 21, 25, 27, 100, 200])
+def test_serve_torch_by_n_servings(tensor, dim, n_servings):
+    if tensor.ndim <= dim:
+        with pytest.raises(ValueError):
+            _ = [*serve(tensor, n_servings=n_servings, dim=dim)]
+        return
+
+    size = tensor.shape[dim]
+    other_dims = [i for i in range(tensor.ndim) if i != dim]
+    other_shapes = [tensor.shape[i] for i in other_dims]
+
+    dollops = [*serve(tensor, n_servings=n_servings, dim=dim)]
+    assert len(dollops) == n_servings
+
+    max_size = size // n_servings + 1
+    assert all(d.shape[dim] in (max_size - 1, max_size) for d in dollops)
+    assert all(isinstance(d, torch.Tensor) for d in dollops)
+
+    for d in dollops:
+        for i, shape in zip(other_dims, other_shapes):
+            assert d.shape[i] == shape, f"Mismatch on dim {i}: expected {shape}, got {d.shape[i]}"
+
+    recon = torch.cat(dollops, dim=dim)
+    np.testing.assert_array_equal(recon.numpy(), tensor.numpy())
+
+
 def test_serve_torch_0d_tensor_raises():
     scalar = torch.tensor(42)
     with pytest.raises(ValueError):
         _ = [*serve(scalar, serving_size=1)]
+    with pytest.raises(ValueError):
+        _ = [*serve(scalar, n_servings=1)]
 
 
 @pytest.mark.parametrize("bad_input", [
@@ -70,3 +100,5 @@ def test_serve_torch_0d_tensor_raises():
 def test_serve_torch_non_tensor_obj_raises_error(bad_input):
     with pytest.raises(TypeError):
         _ = [*serve(bad_input, serving_size=5)]
+    with pytest.raises(TypeError):
+        _ = [*serve(bad_input, n_servings=5)]
