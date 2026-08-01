@@ -1,6 +1,6 @@
 from typing import Generator, TYPE_CHECKING
 
-from ._utils import calculate_slices
+from ._utils import iter_slices
 
 if TYPE_CHECKING:
     import pandas # Keep this here for string-based type-checking
@@ -24,8 +24,6 @@ def serve(pandas_obj: "pandas.DataFrame | pandas.Series", serving_size: int = No
     if not (is_dataframe or is_series):
         raise TypeError(f"Dollop pandas.serve only supports pandas DataFrame or Series")
 
-    slices = calculate_slices(total=len(pandas_obj), serving_size=serving_size, n_servings=n_servings)
-
-    for slc in slices:
+    for slc in iter_slices(total=len(pandas_obj), serving_size=serving_size, n_servings=n_servings):
         yield pandas_obj.iloc[slc]
 

@@ -1,6 +1,6 @@
 from typing import Generator, TYPE_CHECKING
 
-from ._utils import calculate_slices
+from ._utils import iter_slices
 
 if TYPE_CHECKING:
     import torch # Keep this here for string-based type-checking
@@ -27,8 +27,6 @@ def serve(tensor: "torch.Tensor", serving_size: int = None, n_servings: int = No
     if dim < 0 or dim >= tensor.ndim:
         raise ValueError(f"Invalid dim={dim}; tensor has {tensor.ndim} dimensions.")
 
-    slices = calculate_slices(total=tensor.shape[dim], serving_size=serving_size, n_servings=n_servings)
-
     # Make a view of the array with the chosen dim at the front.
     axes = list(range(tensor.ndim))
     axes[0], axes[dim] = axes[dim], axes[0]
@@ -37,6 +35,6 @@ def serve(tensor: "torch.Tensor", serving_size: int = None, n_servings: int = No
     # Get inverse permutation
     axes_inv = [axes.index(i) for i in range(tensor.ndim)]
 
-    for slc in slices:
+    for slc in iter_slices(total=tensor.shape[dim], serving_size=serving_size, n_servings=n_servings):
         dollop = tensor_permuted[slc]
         yield dollop.permute(*axes_inv)

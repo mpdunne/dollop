@@ -1,7 +1,7 @@
 from typing import Any, Generator, Sequence
 from collections.abc import Sequence as SequenceType
 
-from ._utils import calculate_slices
+from ._utils import iter_slices
 
 
 def serve(items: Sequence[Any], serving_size: int = None, n_servings: int = None) -> Generator[Sequence[Any], None, None]:
@@ -17,7 +17,5 @@ def serve(items: Sequence[Any], serving_size: int = None, n_servings: int = None
     if not isinstance(items, SequenceType):
         raise NotImplementedError('Dollop sequence.serve only supports objects of Sequence type.')
 
-    slices = calculate_slices(total=len(items), serving_size=serving_size, n_servings=n_servings)
-
-    for slc in slices:
+    for slc in iter_slices(total=len(items), serving_size=serving_size, n_servings=n_servings):
         yield items[slc]

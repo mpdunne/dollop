@@ -1,6 +1,6 @@
 from typing import Generator, TYPE_CHECKING
 
-from ._utils import calculate_slices
+from ._utils import iter_slices
 
 if TYPE_CHECKING:
     import numpy # Keep this here for string-based type-checking
@@ -27,8 +27,6 @@ def serve(array: "numpy.ndarray", serving_size: int = None, n_servings: int = No
     if dim < 0 or dim >= array.ndim:
         raise ValueError(f"Specified dim ({dim}) must be smaller than the number of array dimensions ({array.ndim})")
 
-    slices = calculate_slices(total=array.shape[dim], serving_size=serving_size, n_servings=n_servings)
-
     # Make a view of the array with the chosen dim at the front.
     axes = list(range(array.ndim))
     axes[0], axes[dim] = axes[dim], axes[0]
@@ -37,6 +35,6 @@ def serve(array: "numpy.ndarray", serving_size: int = None, n_servings: int = No
     # Get inverse permutation
     axes_inv = [axes.index(i) for i in range(array.ndim)]
 
-    for slc in slices:
+    for slc in iter_slices(total=array.shape[dim], serving_size=serving_size, n_servings=n_servings):
         dollop = array_permutated[slc]
         yield dollop.transpose(axes_inv)

@@ -1,4 +1,4 @@
-from typing import List
+from typing import Iterator
 
 
 def validate_serving_args(serving_size=None, n_servings=None) -> None:
@@ -18,7 +18,7 @@ def validate_serving_args(serving_size=None, n_servings=None) -> None:
         raise TypeError("`serving_size` or `n_servings` must be an integer > 0.")
 
 
-def calculate_slices(total: int, serving_size: int = None, n_servings: int = None) -> List[slice]:
+def iter_slices(total: int, serving_size: int = None, n_servings: int = None) -> Iterator[slice]:
     """
     Return a sequence of slice indices for a known total number of items, using either a consistent
     serving size (consistent except for the last dollop) or a set number of servings.
@@ -26,7 +26,7 @@ def calculate_slices(total: int, serving_size: int = None, n_servings: int = Non
     :param total: Total number of items.
     :param serving_size: Desired maximum size per dollop. Mutually exclusive with n_servings.
     :param n_servings: Desired number of dollops. Mutually exclusive with serving_size.
-    :return: List of (start, stop) index tuples.
+    :return: Slice indices as (start, stop) index tuples.
     """
     if (serving_size is None) == (n_servings is None):
         raise ValueError("Exactly one of serving_size or n_servings must be specified.")
@@ -39,7 +39,8 @@ def calculate_slices(total: int, serving_size: int = None, n_servings: int = Non
         if not isinstance(serving_size, int) or serving_size <= 0:
             raise ValueError("serving_size must be a positive integer.")
 
-        slices = [slice(i, min(i + serving_size, total)) for i in range(0, total, serving_size)]
+        for i in range(0, total, serving_size):
+            yield slice(i, min(i + serving_size, total))
 
     else:
 
@@ -50,12 +51,9 @@ def calculate_slices(total: int, serving_size: int = None, n_servings: int = Non
         base = total // n_servings
         remainder = total % n_servings
 
-        slices = []
         start = 0
         for i in range(n_servings):
             dollop_size = base + 1 if i < remainder else base
             stop = start + dollop_size
-            slices.append(slice(start, stop))
+            yield slice(start, stop)
             start = stop
-
-    return slices
